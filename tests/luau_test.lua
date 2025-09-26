@@ -146,7 +146,7 @@ local function run_test(testname, func, input, should_work, output)
 
     local function to_printable_str(str, max_len)
         if #str > max_len then
-            return string.sub(str, 0, max_len) .. "... (" .. #str-max_len .. " bytes omitted)"
+            return string.sub(str, 1, max_len) .. "... (" .. #str-max_len .. " bytes omitted)"
         else
             return str
         end
