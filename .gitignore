@@ -6,3 +6,4 @@ packages
 tags
 tests/utf8.dat
 _build
+.vscode

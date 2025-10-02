@@ -585,7 +585,7 @@ local cjson_tests = {
     -- by default. Force a known problematic locale to test strtod()/sprintf().
     { "Set locale to en_DK.utf8 (comma separator)", function ()
         luau_setlocale("en_DK.utf8")
-        cjson.new()
+        cjson.reset()
     end },
     { "Encode number under comma locale",
       cjson.encode, { 1.5 }, true, { '1.5' } },
@@ -593,7 +593,7 @@ local cjson_tests = {
       cjson.decode, { '[ 10, "test" ]' }, true, { { 10, "test" } } },
     { "Revert locale to POSIX", function ()
         luau_setlocale("C")
-        cjson.new()
+        cjson.reset()
     end },
 
     -- Test encode_keep_buffer() and enable_number_precision()
@@ -635,8 +635,8 @@ local cjson_tests = {
       cjson.encode_sparse_array, { "not quite on" },
       false, { "invalid argument #1 to 'encode_sparse_array' (invalid option 'not quite on')" } },
 
-    { "Reset Lua CJSON configuration", function () cjson.reset_config() end },
-    -- Wrap in a function to ensure the table returned by cjson.new() is used
+    { "Reset Lua CJSON configuration", function () cjson.reset() end },
+    -- Wrap in a function to ensure the table returned by cjson.reset() is used
     { "Check encode_sparse_array()",
       function (...) return cjson.encode_sparse_array(...) end, { },
       true, { false, 2, 10 } },
@@ -646,12 +646,15 @@ local cjson_tests = {
       true, { "true" } },
     { "Encode (safe) argument validation [throw error]",
       cjson_safe.encode, { "arg1", "arg2" },
-      false, { "invalid argument #1 to 'json_protect_conversion' (expected 1 argument)" } },
+      false, { "invalid argument #1 to 'encode' (expected 1 argument)" } },
     { "Decode (safe) error generation",
       cjson_safe.decode, { "Oops" },
       true, { nil, "Expected value but found invalid token at character 1" } },
-    { "Decode (safe) error generation after new()",
-      function(...) return cjson_safe.new().decode(...) end, { "Oops" },
+    { "Decode (safe) error generation after reset()",
+      function(...) 
+        cjson_safe.reset() 
+        return cjson_safe.decode(...) 
+      end, { "Oops" },
       true, { nil, "Expected value but found invalid token at character 1" } },
 }
 

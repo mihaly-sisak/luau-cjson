@@ -17,6 +17,11 @@ if(NOT CMAKE_BUILD_TYPE)
         FORCE)
 endif()
 
+#add_compile_options(-fno-omit-frame-pointer -mno-omit-leaf-frame-pointer)
+
+#add_compile_options(-fsanitize=address)
+#add_link_options(-fsanitize=address)
+
 if(USE_LUAU)
     add_library(cjson)
 else()

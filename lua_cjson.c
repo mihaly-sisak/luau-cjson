@@ -382,7 +382,7 @@ static int json_destroy_config(lua_State *l)
     json_config_t *cfg;
 
     cfg = (json_config_t *)lua_touserdata(l, 1);
-    if (cfg)
+    if (cfg && cfg->encode_keep_buffer)
         strbuf_free(&cfg->encode_buf);
     cfg = NULL;
 
@@ -457,7 +457,11 @@ static int json_reset_config(lua_State *l)
 {
     json_config_t *cfg = json_arg_init(l, 0);
 
-    if (cfg) json_config_init(cfg);
+    if (cfg){
+        if (cfg->encode_keep_buffer)
+            strbuf_free(&cfg->encode_buf);
+        json_config_init(cfg);
+    }
 
     return 0;
 }
@@ -465,7 +469,6 @@ static int json_reset_config(lua_State *l)
 static void json_create_config(lua_State *l)
 {
     json_config_t *cfg;
-    int i;
 
     cfg = (json_config_t *)lua_newuserdata(l, sizeof(*cfg));
 
@@ -1409,8 +1412,10 @@ static int lua_cjson_new(lua_State *l)
         { "encode_keep_buffer", json_cfg_encode_keep_buffer },
         { "encode_invalid_numbers", json_cfg_encode_invalid_numbers },
         { "decode_invalid_numbers", json_cfg_decode_invalid_numbers },
+#ifndef ENABLE_CJSON_GLOBAL
         { "new", lua_cjson_new },
-        { "reset_config", json_reset_config},
+#endif
+        { "reset", json_reset_config},
         { NULL, NULL }
     };
 
@@ -1446,17 +1451,19 @@ static int lua_cjson_safe_new(lua_State *l)
     lua_cjson_new(l);
 
     /* Fix new() method */
+#ifndef ENABLE_CJSON_GLOBAL
     #ifdef LUAU
     lua_pushcfunction(l, lua_cjson_safe_new, "lua_cjson_safe_new");
     #else
     lua_pushcfunction(l, lua_cjson_safe_new);
     #endif
     lua_setfield(l, -2, "new");
+#endif
 
     for (i = 0; func[i]; i++) {
         lua_getfield(l, -1, func[i]);
         #ifdef LUAU
-        lua_pushcclosure(l, json_protect_conversion, "json_protect_conversion", 1);
+        lua_pushcclosure(l, json_protect_conversion, func[i], 1);
         #else
         lua_pushcclosure(l, json_protect_conversion, 1);
         #endif
